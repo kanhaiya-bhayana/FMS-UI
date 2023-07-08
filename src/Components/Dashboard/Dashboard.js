@@ -1,9 +1,17 @@
 import { event } from 'jquery';
 import React, { useState } from 'react';
+import { Button, notification, Space } from 'antd';
 
 export default function Dashboard() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedFile2, setSelectedFile2] = useState(null);
+  const [api, contextHolder] = notification.useNotification();
+  const openNotificationWithIcon = (type,msg,des) => {
+      api[type]({
+          message: msg,
+          description:des
+      });
+  };
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
@@ -15,8 +23,8 @@ export default function Dashboard() {
     event.preventDefault();
     
     const formData = new FormData();
-    formData.append('AccountNumber', "Acc106");
-    formData.append('CustomerName', "Updated3");
+    formData.append('AccountNumber', "SBI105C");
+    formData.append('CustomerName', "Anshika");
     formData.append('Balance', 10000);
     formData.append('File', selectedFile);
     formData.append('File2', selectedFile2);
@@ -37,24 +45,35 @@ export default function Dashboard() {
       },
       body: formData,
     })
-      .then((response) => {
-        if (response.ok) {
-          // File uploaded successfully
-          console.log(response.json());
-          console.log('File uploaded successfully');
-        } else {
-          // Error uploading file
-          console.log(response.json());
-          console.error('Error uploading file');
-        }
-      })
-      .catch((error) => {
-        console.error('Error uploading file:', error);
-      });
+    .then((response) => {
+      if (response.ok) {
+        // File uploaded successfully
+        return response.json(); // Parse the response body as JSON
+      } else {
+        // Error uploading file
+        throw new Error('Error uploading file');
+      }
+    })
+    .then((data) => {
+      // Access the response data
+      console.log(data);
+      if (data.error == false){
+        console.log('File uploaded successfully');
+        openNotificationWithIcon('success','File uploaded successfully',data.status)
+      }
+      else{
+        openNotificationWithIcon('error','Error uploading file',data.status)
+        console.log('Error occured.');
+      }
+    })
+    .catch((error) => {
+      console.error('Error uploading file:', error);
+    });
   };
 
   return (
     <div>
+      {contextHolder}
       <h1>File Upload</h1>
       <form onSubmit={handleSubmit}>
         <input type="file" onChange={handleFileChange} />
